@@ -72,8 +72,8 @@ public class ConnectionContext {
     }
 
     void negotiated(SMBProtocolNegotiator.NegotiationContext negotiationContext) {
-//        gssNegotiateToken = response.getGssToken();
         SMB2NegotiateResponse response = negotiationContext.getNegotiationResponse();
+        this.gssNegotiateToken = response.getGssToken();
         this.server = negotiationContext.getServer();
         this.negotiatedProtocol = new NegotiatedProtocol(response.getDialect(), response.getMaxTransactSize(), response.getMaxReadSize(), response.getMaxWriteSize(), supportsMultiCredit());
         this.cipherId = negotiationContext.getCipher();
