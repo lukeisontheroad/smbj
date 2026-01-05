@@ -18,7 +18,6 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-crypto.git", from: "3.0.0"),
-        .package(url: "https://github.com/apple/swift-nio.git", from: "2.0.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
     ],
     targets: [
@@ -26,7 +25,6 @@ let package = Package(
             name: "SMBJ",
             dependencies: [
                 .product(name: "Crypto", package: "swift-crypto"),
-                .product(name: "NIO", package: "swift-nio"),
                 .product(name: "Logging", package: "swift-log"),
             ],
             path: "Sources/SMBJ"

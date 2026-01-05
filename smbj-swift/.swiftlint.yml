@@ -1,0 +1,36 @@
+# SwiftLint configuration for SMBJ-Swift
+
+disabled_rules:
+  - trailing_whitespace
+  - line_length
+  - file_length
+  - type_body_length
+  - function_body_length
+  - cyclomatic_complexity
+  - force_cast
+  - force_try
+  - identifier_name
+
+opt_in_rules:
+  - empty_count
+  - empty_string
+  - closure_spacing
+  - contains_over_filter_count
+  - contains_over_filter_is_empty
+  - contains_over_first_not_nil
+  - contains_over_range_nil_comparison
+  - empty_collection_literal
+  - first_where
+  - last_where
+  - flatmap_over_map_reduce
+  - sorted_first_last
+
+included:
+  - Sources
+  - Tests
+
+excluded:
+  - .build
+  - Package.swift
+
+reporter: "xcode"
