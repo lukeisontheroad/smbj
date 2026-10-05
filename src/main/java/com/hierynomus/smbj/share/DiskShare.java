@@ -103,6 +103,13 @@ public class DiskShare extends Share {
                                                            final SMB2ImpersonationLevel impersonationLevel, final Set<AccessMask> accessMask,
                                                            final Set<FileAttributes> fileAttributes, final Set<SMB2ShareAccess> shareAccess,
                                                            final SMB2CreateDisposition createDisposition, final Set<SMB2CreateOptions> createOptions) {
+        if (!treeConnect.isDfsShare()) {
+            // Not a DFS share (no SMB2_SHARE_CAP_DFS): resolving up front only costs a root
+            // referral request that fails, before every single create. A path the server does
+            // not cover (e.g. a widelink) still answers STATUS_PATH_NOT_COVERED, which
+            // createFileAndResolve resolves through DFS as before.
+            return createFileAndResolve(path, impersonationLevel, accessMask, fileAttributes, shareAccess, createDisposition, createOptions);
+        }
         try {
             SMB2CreateResponseContext target = resolver.resolve(session, path, new PathResolver.ResolveAction<SMB2CreateResponseContext>() {
                 @Override
