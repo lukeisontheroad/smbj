@@ -40,6 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -267,7 +268,16 @@ public class DFSPathResolver implements PathResolver {
      */
     private <T> T step6(Session session, ResolveState<T> state) throws DFSException {
         logger.trace("DFS[6]: {}", state);
-        ReferralResult result = sendDfsReferralRequest(DfsRequestType.ROOT, state.path.getPathComponents().get(0), session, state.path);
+        List<String> components = state.path.getPathComponents();
+        ReferralResult result = sendDfsReferralRequest(DfsRequestType.ROOT, components.get(0), session, state.path);
+        if (!NtStatus.isSuccess(result.status) && components.size() > 2) {
+            // A root server answers a root referral for a path below the root with the link's
+            // referral, but a domain controller answers only for the namespace root itself
+            // (\\domain\\root) and refuses \\domain\\root\\link\\... with STATUS_NOT_FOUND - which
+            // broke every interlink whose target is a domain-based namespace. Retry with the root.
+            result = sendDfsReferralRequest(DfsRequestType.ROOT, components.get(0), session,
+                new DFSPath(components.subList(0, 2)));
+        }
         if (NtStatus.isSuccess(result.status)) {
             return step7(session, state, result.referralCacheEntry);
         }
