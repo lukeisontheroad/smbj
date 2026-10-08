@@ -296,7 +296,8 @@ public class Connection extends Pooled<Connection> implements Closeable, PacketR
     public void handleError(Throwable t) {
         outstandingRequests.handleError(t);
         try {
-            this.close();
+            // Called by the packet reader: a graceful close would await LOGOFF responses only it can read.
+            this.close(true);
         } catch (Exception e) {
             String exceptionClass = e.getClass().getSimpleName();
             logger.debug("{} while closing connection on error, ignoring: {}", exceptionClass, e.getMessage());

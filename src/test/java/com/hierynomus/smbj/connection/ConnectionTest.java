@@ -16,6 +16,7 @@
 package com.hierynomus.smbj.connection;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static com.hierynomus.smbj.testing.Utils.*;
@@ -32,6 +33,7 @@ import com.hierynomus.mssmb2.SMB2MessageCommandCode;
 import com.hierynomus.mssmb2.SMB2Packet;
 import com.hierynomus.mssmb2.messages.SMB2NegotiateRequest;
 import com.hierynomus.mssmb2.messages.SMB2NegotiateResponse;
+import com.hierynomus.protocol.transport.TransportException;
 import com.hierynomus.smbj.SMBClient;
 import com.hierynomus.smbj.SmbConfig;
 import com.hierynomus.smbj.testing.PacketProcessor.NoOpPacketProcessor;;
@@ -104,5 +106,17 @@ public class ConnectionTest {
         conn = client.connect("foo");
         assertEquals(two, client.getServerList().lookup("foo").getServerGUID());
         assertEquals(two, conn.getConnectionContext().getServer().getServerGUID());
+    }
+
+    @Test
+    public void shouldDisconnectOnErrorWhileOtherUsersHoldTheConnection() throws Exception {
+        SMBClient client = new SMBClient(config(new NoOpPacketProcessor()));
+        Connection conn = client.connect("foo");
+        client.connect("foo");
+
+        conn.handleError(new TransportException("broken"));
+
+        assertFalse(conn.isConnected());
+        assertNull(client.getServerList().lookup("foo"));
     }
 }
