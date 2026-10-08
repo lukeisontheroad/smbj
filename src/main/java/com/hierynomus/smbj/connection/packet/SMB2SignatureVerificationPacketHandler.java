@@ -15,6 +15,7 @@
  */
 package com.hierynomus.smbj.connection.packet;
 
+import com.hierynomus.mserref.NtStatus;
 import com.hierynomus.mssmb2.DeadLetterPacketData;
 import com.hierynomus.mssmb2.SMB2PacketData;
 import com.hierynomus.protocol.transport.TransportException;
@@ -82,6 +83,12 @@ public class SMB2SignatureVerificationPacketHandler extends SMB2PacketHandler {
             return;
         }
 
+        if (packetData.getHeader().getStatusCode() == NtStatus.STATUS_PENDING.getValue()) {
+            logger.debug("Status is STATUS_PENDING, no verification necessary");
+            next.handle(packetData);
+            return;
+        }
+
         if (packetData.isDecrypted()) {
             logger.debug("Passthrough Signature Verification as packet is decrypted");
             next.handle(packetData);
@@ -108,9 +115,7 @@ public class SMB2SignatureVerificationPacketHandler extends SMB2PacketHandler {
                 next.handle(packetData);
                 return;
             } else {
-                logger.warn("Invalid packet signature for packet {}", packetData);
-                next.handle(new DeadLetterPacketData(packetData.getHeader()));
-                return;
+                throw invalid("Invalid packet signature for packet " + packetData);
             }
         }
 
@@ -121,13 +126,20 @@ public class SMB2SignatureVerificationPacketHandler extends SMB2PacketHandler {
                 long sessionId = packetData.getHeader().getSessionId();
                 Session session = sessionTable.find(sessionId);
                 if (session != null && session.isSigningRequired()) {
-                    logger.warn("Illegal request, session requires message signing, but packet {} is not signed.", packetData);
-                    next.handle(new DeadLetterPacketData(packetData.getHeader()));
-                    return;
+                    throw invalid("Illegal request, session requires message signing, but packet " + packetData + " is not signed.");
                 }
             }
         }
         next.handle(packetData);
+    }
+
+    /**
+     * [MS-SMB2] 3.2.5.1.3 The message is discarded and the connection disconnected, which fails
+     * the outstanding requests: the message was the response to one of them.
+     */
+    private TransportException invalid(String reason) {
+        logger.warn(reason);
+        return new TransportException(reason);
     }
 //
 //    private void verifyPacketSignature(SMB2Packet packet, Session session) throws TransportException {
