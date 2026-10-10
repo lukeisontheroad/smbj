@@ -287,9 +287,10 @@ public final class SmbConfig {
         if (isDfsEnabled()) {
             set.add(SMB2GlobalCapability.SMB2_GLOBAL_CAP_DFS);
         }
-        if (isEncryptData()) {
-            set.add(SMB2GlobalCapability.SMB2_GLOBAL_CAP_ENCRYPTION);
-        }
+        // [MS-SMB2] 3.2.4.2.2.2 A client supporting encryption SHOULD set the capability. It is
+        // no request to encrypt: a share or server requiring encryption gets it (TreeConnect,
+        // Session); encryptData additionally encrypts every session.
+        set.add(SMB2GlobalCapability.SMB2_GLOBAL_CAP_ENCRYPTION);
         return set;
     }
 

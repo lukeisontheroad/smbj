@@ -17,10 +17,13 @@ package com.hierynomus.smbj;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
 import com.hierynomus.mssmb2.SMB2Dialect;
+import com.hierynomus.mssmb2.SMB2GlobalCapability;
 
 public class SmbConfigTest {
     @Test
@@ -38,5 +41,18 @@ public class SmbConfigTest {
     public void shouldNotBuildConfigWithDisabledSigningAndSmb3xDialect() {
         assertThrows(IllegalStateException.class,
                 () -> SmbConfig.builder().withDialects(SMB2Dialect.SMB_3_0).withSigningEnabled(false).build());
+    }
+
+    @Test
+    public void shouldAdvertiseEncryptionSupportWithSmb3xWithoutEncryptingEverySession() {
+        SmbConfig config = SmbConfig.builder().withDialects(SMB2Dialect.SMB_2_1, SMB2Dialect.SMB_3_1_1).build();
+        assertFalse(config.isEncryptData());
+        assertTrue(config.getClientCapabilities().contains(SMB2GlobalCapability.SMB2_GLOBAL_CAP_ENCRYPTION));
+    }
+
+    @Test
+    public void shouldAdvertiseNoCapabilitiesWithoutSmb3x() {
+        SmbConfig config = SmbConfig.builder().withDialects(SMB2Dialect.SMB_2_1).build();
+        assertTrue(config.getClientCapabilities().isEmpty());
     }
 }

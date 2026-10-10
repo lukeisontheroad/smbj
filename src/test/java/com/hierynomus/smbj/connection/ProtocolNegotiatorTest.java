@@ -40,6 +40,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.params.provider.EnumSource;
 
 public class ProtocolNegotiatorTest {
@@ -75,16 +76,11 @@ public class ProtocolNegotiatorTest {
         return negotiateContexts;
     }
 
-    @Test
-    public void shouldNotAddEncryptionCapabilitiesIfEncryptDataIsFalse() throws Exception {
-        List<SMB2NegotiateContext> negotiateContexts = buildNegotateContexts(SMB2Dialect.SMB_3_1_1, false);
-        assertEquals(1, negotiateContexts.size());
-        assertInstanceOf(SMB2PreauthIntegrityCapabilities.class, negotiateContexts.get(0));
-    }
-
-    @Test
-    public void shouldAddEncryptionCapabilitiesIfEncryptDataIsTrue() throws Exception {
-        List<SMB2NegotiateContext> negotiateContexts = buildNegotateContexts(SMB2Dialect.SMB_3_1_1, true);
+    @ParameterizedTest(name = "encryptData {0}: encryption capabilities are offered all the same")
+    @ValueSource(booleans = {false, true})
+    public void shouldAddEncryptionCapabilitiesWhetherOrNotEverySessionIsEncrypted(boolean encryptData) throws Exception {
+        // A share or server requiring encryption gets it only from a client that offered it.
+        List<SMB2NegotiateContext> negotiateContexts = buildNegotateContexts(SMB2Dialect.SMB_3_1_1, encryptData);
         assertEquals(2, negotiateContexts.size());
         assertInstanceOf(SMB2PreauthIntegrityCapabilities.class, negotiateContexts.get(0));
         assertInstanceOf(SMB2EncryptionCapabilities.class, negotiateContexts.get(1));
